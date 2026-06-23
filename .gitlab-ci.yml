@@ -11,6 +11,8 @@ stages:
 
 print_env_job:
   stage: info
+  tags:
+    - quickbite
   before_script:
     - echo "Chuẩn bị in thông tin môi trường cho dự án ${PROJECT_NAME}..."
   script:
