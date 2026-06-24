@@ -1,23 +1,26 @@
-image: eclipse-temurin:17-jdk-alpine
-
-
-variables:
-  PROJECT_NAME: "QuickBite-User-Service"
-
-
 stages:
   - info
+  - print
 
-
-print_env_job:
+job_info_1:
   stage: info
   tags:
     - quickbite
-  before_script:
-    - echo "Chuẩn bị in thông tin môi trường cho dự án ${PROJECT_NAME}..."
   script:
-    - java -version
-    - echo "Tên dự án hiện tại là ${PROJECT_NAME}"
-    - echo "Nhánh Git đang chạy pipeline là ${CI_COMMIT_BRANCH}"
-  after_script:
-    - echo "Hoàn thành job in thông tin môi trường."
+    - echo "Bắt đầu thu thập thông tin hệ thống..."
+    - uname -a
+
+job_info_2:
+  stage: info
+  tags:
+    - quickbite
+  script:
+    - echo "Bắt đầu kiểm tra môi trường..."
+    - whoami
+
+job_print:
+  stage: print
+  tags:
+    - quickbite
+  script:
+    - echo "In ra kết quả cuối cùng từ pipeline..."
