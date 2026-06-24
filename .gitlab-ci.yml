@@ -1,26 +1,34 @@
+image: eclipse-temurin:17-jdk-alpine
+
 stages:
-  - info
-  - print
+  - build_jar
+  - build_image
 
-job_info_1:
-  stage: info
+variables:
+  IMAGE_NAME: "user-service"
+
+# Job biên dịch code ra file JAR
+build_jar_job:
+  stage: build_jar
   tags:
     - quickbite
   script:
-    - echo "Bắt đầu thu thập thông tin hệ thống..."
-    - uname -a
+    - chmod +x ./gradlew
+    - ./gradlew bootJar
+  artifacts:
+    paths:
+      - build/libs/*.jar
+    expire_in: 1 hour
 
-job_info_2:
-  stage: info
+# Job build Docker image sử dụng file JAR artifacts từ stage trước
+# Lưu ý: Không cần khai báo services: - docker:dind do dùng Local Runner gắn socket
+build_docker_image_job:
+  stage: build_image
+  image: docker:latest
   tags:
     - quickbite
+  dependencies:
+    - build_jar_job
   script:
-    - echo "Bắt đầu kiểm tra môi trường..."
-    - whoami
-
-job_print:
-  stage: print
-  tags:
-    - quickbite
-  script:
-    - echo "In ra kết quả cuối cùng từ pipeline..."
+    # Biên dịch Docker image từ Dockerfile đơn tầng trực tiếp trên daemon của máy host
+    - docker build -t ${IMAGE_NAME}:latest .
