@@ -18,9 +18,13 @@ import com.quickbite.user_service.models.dtos.UserWalletDto;
 import com.quickbite.user_service.models.entities.User;
 import com.quickbite.user_service.models.entities.UserAddress;
 import com.quickbite.user_service.models.entities.UserWallet;
+import com.quickbite.user_service.models.entities.WalletTransaction;
 import com.quickbite.user_service.repositories.UserAddressRepository;
 import com.quickbite.user_service.repositories.UserRepository;
 import com.quickbite.user_service.repositories.UserWalletRepository;
+import com.quickbite.user_service.repositories.WalletTransactionRepository;
+
+import java.time.LocalDateTime;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +34,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserAddressRepository addressRepository;
     private final UserWalletRepository walletRepository;
+    private final WalletTransactionRepository walletTransactionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final RefreshTokenService refreshTokenService;
@@ -240,6 +245,64 @@ public class UserService {
         wallet.setBalance(wallet.getBalance().subtract(amount));
         UserWallet savedWallet = walletRepository.save(wallet);
         return mapToWalletDto(savedWallet);
+    }
+
+    @Transactional
+    public void deductWallet(Long userId, String transactionId, BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Deduct amount must be greater than zero");
+        }
+
+        if (walletTransactionRepository.existsById(transactionId)) {
+            // Already processed
+            return;
+        }
+
+        UserWallet wallet = walletRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+
+        if (wallet.getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Insufficient wallet balance");
+        }
+
+        wallet.setBalance(wallet.getBalance().subtract(amount));
+        walletRepository.save(wallet);
+
+        WalletTransaction tx = WalletTransaction.builder()
+                .id(transactionId)
+                .userId(userId)
+                .amount(amount)
+                .type("DEDUCT")
+                .createdAt(LocalDateTime.now())
+                .build();
+        walletTransactionRepository.save(tx);
+    }
+
+    @Transactional
+    public void refundWallet(Long userId, String transactionId, BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Refund amount must be greater than zero");
+        }
+
+        if (walletTransactionRepository.existsById(transactionId)) {
+            // Already processed
+            return;
+        }
+
+        UserWallet wallet = walletRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+
+        wallet.setBalance(wallet.getBalance().add(amount));
+        walletRepository.save(wallet);
+
+        WalletTransaction tx = WalletTransaction.builder()
+                .id(transactionId)
+                .userId(userId)
+                .amount(amount)
+                .type("REFUND")
+                .createdAt(LocalDateTime.now())
+                .build();
+        walletTransactionRepository.save(tx);
     }
 
     // --- Helpers ---
