@@ -4,9 +4,6 @@ image: docker:latest
 stages:
   - test_image
 
-variables:
-  DOCKER_HOST: "unix:///var/run/docker.sock"
-
 test_docker_image_job:
   stage: test_image
   tags:
