@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/favicon.ico").permitAll()
                         // TODO(security): Secure internal communication (e.g. using API Keys, mTLS, or OAuth2 Client Credentials)
                         .requestMatchers("/api/v1/users/{id}/wallet/deduct", "/api/v1/users/{id}/wallet/refund", "/api/v1/users/{id}").permitAll()
+                        .requestMatchers("/actuator/**", "/actuator/prometheus").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
