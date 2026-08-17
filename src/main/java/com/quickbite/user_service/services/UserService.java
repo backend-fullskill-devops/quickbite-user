@@ -27,9 +27,11 @@ import com.quickbite.user_service.repositories.WalletTransactionRepository;
 import java.time.LocalDateTime;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
     private final UserRepository userRepository;
     private final UserAddressRepository addressRepository;
@@ -276,6 +278,7 @@ public class UserService {
                 .createdAt(LocalDateTime.now())
                 .build();
         walletTransactionRepository.save(tx);
+        log.info("Wallet deducted: userId={}, transactionId={}", userId, transactionId);
     }
 
     @Transactional
