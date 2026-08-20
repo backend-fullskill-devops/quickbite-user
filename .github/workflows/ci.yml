@@ -14,4 +14,4 @@ jobs:
       - name: Cấp quyền thực thi cho gradlew
         run: chmod +x gradlew
       - name: Test và build artifacts
-        run: ./gradlew bootJar
+        run: ./gradlew build
