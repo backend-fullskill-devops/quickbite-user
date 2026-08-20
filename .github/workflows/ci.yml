@@ -9,5 +9,7 @@ jobs:
   build_and_test:
     runs-on: ubuntu-latest
     steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@v5
       - name: Test và build artifacts
         run: ./gradlew build
