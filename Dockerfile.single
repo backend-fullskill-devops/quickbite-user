@@ -1,0 +1,15 @@
+FROM eclipse-temurin:17-jdk-alpine
+
+WORKDIR /app
+
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY src src
+
+RUN chmod +x ./gradlew
+RUN ./gradlew bootJar --no-daemon
+
+EXPOSE 8082
+
+ENTRYPOINT ["java", "-jar", "build/libs/user-service.jar"]
