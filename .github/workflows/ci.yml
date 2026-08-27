@@ -1,0 +1,45 @@
+name: CI 
+
+on:  
+  push:
+    branches:
+      - main
+
+jobs:
+  test_image:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+    env:
+      IMAGE_REF: ghcr.io/backend-fullskill-devops/user-service:1.0.0
+      USER_SERVICE_ENV: ${{ secrets.USER_SERVICE_ENV }}
+    steps:
+      - name: Đăng nhập GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull và kiểm tra user-service
+        run: |
+          printf '%s' "$USER_SERVICE_ENV" > "$RUNNER_TEMP/user-service.env"
+          docker pull "$IMAGE_REF"
+          docker run -d --name verify_user_service \
+            --network quickbite-net \
+            --env-file "$RUNNER_TEMP/user-service.env" \
+            -p 8081:8081 "$IMAGE_REF"
+
+          for i in {1..12}; do
+            curl --silent --fail http://localhost:8081/actuator/health && exit 0
+            sleep 5
+          done
+
+          docker logs verify_user_service
+          exit 1
+
+      - name: Dọn tài nguyên kiểm tra
+        if: always()
+        run: |
+          docker rm -f verify_user_service || true
+          rm -f "$RUNNER_TEMP/user-service.env"
